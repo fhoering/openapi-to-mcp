@@ -2,13 +2,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
 using ModelContextProtocol.Protocol.Types;
 using OpenApiToMcp.Cli;
 
 try
 {
-
     await Cli.RunAsync<Command>(args);
 }
 catch (Exception e)
@@ -22,21 +20,26 @@ public class Command
     [CliArgument(Description = "Url of you OpenAPI specification", Required = true)]
     public string OpenApiUrl { get; set; }
 
-    [CliOption(Description =
-        "Server URL override. For example this allow to target a different server than the base one specified in the OpenAPI")]
+    [CliOption(Aliases = ["-s"], Description = "Server URL override")]
     public string? ServerUrlOverride { get; set; } = null;
-
-    [CliOption(Description = "Authentication method")]
-    public AuthenticationMethod? AuthMethodOverride { get; set; } = null;
-
-    [CliOption(Description = "The token endpoint (ex: https://petstore.swagger.io/oauth2/token)")]
-    public string? TokenUrl { get; set; } = null;
     
-    [CliOption(Description = "Client id (for client credentials auth")]
-    public string? ClientId { get; set; } = null;
+    [CliOption(Aliases = ["-b"], Description = "Bearer token")]
+    public string? BearerToken { get; set; } = null;
     
-    [CliOption(Description = "Client secret (for client credentials auth")]
-    public string? ClientSecret { get; set; } = null;
+    [CliOption(Aliases = ["-o2"], Description = "OAuth2 flow to be used")]
+    public OAuth2Flow? Oauth2Flow { get; set; } = null;
+
+    [CliOption(Aliases = ["-o2.tu"], Description = "OAuth2 token endpoint URL (override the one defined in your OpenAPI for your chosen OAuth2 flow)"),]
+    public string? Oauth2TokenUrl { get; set; } = null;
+    
+    [CliOption(Aliases = ["-o2.ci"], Description = "OAuth2 client id")]
+    public string? Oauth2ClientId { get; set; } = null;
+    
+    [CliOption(Aliases = ["-o2.cs"], Description = "OAuth2 client secret")]
+    public string? Oauth2ClientSecret { get; set; } = null;
+    
+    [CliOption(Aliases = ["-o2.rt"], Description = "OAuth2 refresh token")]
+    public string? Oauth2RefreshToken { get; set; } = null;
  
     public async Task RunAsync()
     {
@@ -87,7 +90,7 @@ public class Command
     }
 }
 
-public enum AuthenticationMethod
+public enum OAuth2Flow
 {
-    None, ClientCredentials
+    client_credentials,refresh_token,password,implici
 }
