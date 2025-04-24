@@ -1,3 +1,5 @@
+[![.NET Build](https://github.com/ouvreboite/openapi-to-mcp/actions/workflows/dotnet-build.yml/badge.svg)](https://github.com/ouvreboite/openapi-to-mcp/actions/workflows/dotnet-build.yml)
+
 # openapi-to-mcp
  An MCP server for your API
 
