@@ -17,11 +17,11 @@ catch (Exception e)
 [CliCommand(Description = "An on-the-fly OpenAPI MCP server")]
 public class Command
 {
-    [CliArgument(Description = "Url of you OpenAPI specification", Required = true)]
-    public string OpenApiUrl { get; set; }
+    [CliArgument(Description = "You OpenAPI specification (URL or file)")]
+    public required string OpenApi { get; set; }
 
-    [CliOption(Aliases = ["-s"], Description = "Server URL override")]
-    public string? ServerUrlOverride { get; set; } = null;
+    [CliOption(Aliases = ["-s"], Description = "Server host override")]
+    public string? ServerHostOverride { get; set; } = null;
     
     [CliOption(Aliases = ["-b"], Description = "Bearer token")]
     public string? BearerToken { get; set; } = null;
@@ -46,15 +46,16 @@ public class Command
         try
         {
             //scaffold
-            var openApiDocument = await new OpenApiParser().Parse(OpenApiUrl);
+            var openApiDocument = await new OpenApiParser().Parse(OpenApi, ServerHostOverride);
             var endpoints = new EndpointsExtractor().Extract(openApiDocument);
             var tools = new McpToolsBuilder().BuildFromEndpoints(endpoints);
 
             //extract server url
-            var serverUrl = ServerUrlOverride ?? openApiDocument.Servers.FirstOrDefault()?.Url;
-            if (string.IsNullOrEmpty(serverUrl))
+            var serverUrl = openApiDocument.Servers.FirstOrDefault()?.Url;
+            Console.Error.WriteLine("Server URL: " + serverUrl);
+            if (string.IsNullOrEmpty(serverUrl) || !Uri.TryCreate(serverUrl, UriKind.Absolute, out _))
             {
-                Console.Error.WriteLine($"No server URL specified in the OpenAPI document. Please use the {nameof(ServerUrlOverride)} option");
+                Console.Error.WriteLine($"The server URL cannot be inferred or is not absolute. Please use the {nameof(ServerHostOverride)} option");
                 return;
             }
 
@@ -72,8 +73,8 @@ public class Command
                 {
                     serverOptions.ServerInfo = new Implementation
                     {
-                        Name = OpenApiUrl,
-                        Version = "1.0",
+                        Name = openApiDocument.Info?.Title ?? "API",
+                        Version = openApiDocument.Info?.Version ?? "0.0",
                     };
                 })
                 .WithStdioServerTransport()
@@ -85,7 +86,7 @@ public class Command
         }
         catch (Exception e)
         {
-            Console.Error.WriteLine("Unmanaged exception: "+e.Message);
+            Console.Error.WriteLine("Error: "+e.Message);
         }
     }
 }
