@@ -5,7 +5,7 @@ using Microsoft.OpenApi.Extensions;
 using Microsoft.OpenApi.Models;
 using ModelContextProtocol.Protocol.Types;
 
-namespace OpenApiToMcp.Cli;
+namespace OpenApiToMcp;
 
 public class McpToolsBuilder
 {

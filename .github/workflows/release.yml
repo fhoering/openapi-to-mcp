@@ -27,7 +27,7 @@ jobs:
           dotnet-version: "8.0.x" # Adjust if needed
 
       - name: Publish CLI
-        run: dotnet publish OpenApiToMcp.Cli/OpenApiToMcp.Cli.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:EnableCompressionInSingleFile=true -o ./publish/${{ matrix.rid }}
+        run: dotnet publish OpenApiToMcp/OpenApiToMcp.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:EnableCompressionInSingleFile=true -o ./publish/${{ matrix.rid }}
         shell: bash
 
       - name: Upload Windows artifact
@@ -35,11 +35,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact-name }}
-          path: ./publish/${{ matrix.rid }}/OpenApiToMcp.Cli.exe
+          path: ./publish/${{ matrix.rid }}/OpenApiToMcp.exe
 
       - name: Upload macOS artifact
         if: matrix.os == 'macos-latest'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact-name }}
-          path: ./publish/${{ matrix.rid }}/OpenApiToMcp.Cli
+          path: ./publish/${{ matrix.rid }}/OpenApiToMcp

@@ -1,12 +1,6 @@
-﻿using System.Text.Json;
-using System.Text.Json.Nodes;
-using Microsoft.OpenApi;
-using Microsoft.OpenApi.Extensions;
-using Microsoft.OpenApi.Models;
-using Microsoft.OpenApi.Readers;
-using Microsoft.OpenApi.Writers;
+﻿using Microsoft.OpenApi.Models;
 
-namespace OpenApiToMcp.Cli;
+namespace OpenApiToMcp;
 
 public class EndpointsExtractor
 {

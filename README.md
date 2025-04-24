@@ -8,7 +8,7 @@
 {
     "mcpServers": {
         "petstore": {
-            "command": "OpenApiToMcp.Cli.exe",
+            "command": "OpenApiToMcp.exe",
             "args": [
                 "https://petstore3.swagger.io/api/v3/openapi.json"
             ]
@@ -20,7 +20,7 @@
 ## building
 
 ```
-cd OpenApiToMcp.Cli
+cd OpenApiToMcp
 dotnet publish -c Release -r win-x64 --self-contained true -p:EnableCompressionInSingleFile=true  
 dotnet publish -c Release -r osx-arm64 --self-contained true -p:EnableCompressionInSingleFile=true  
 ```

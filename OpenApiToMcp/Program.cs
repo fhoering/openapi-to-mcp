@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol.Types;
-using OpenApiToMcp.Cli;
+using OpenApiToMcp;
 
 try
 {

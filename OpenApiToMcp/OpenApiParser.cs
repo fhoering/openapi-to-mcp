@@ -2,7 +2,7 @@
 using Microsoft.OpenApi.Readers;
 using Microsoft.OpenApi.Writers;
 
-namespace OpenApiToMcp.Cli;
+namespace OpenApiToMcp;
 
 public class OpenApiParser
 {

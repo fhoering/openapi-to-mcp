@@ -4,7 +4,7 @@ using System.Web;
 using ModelContextProtocol.Protocol.Types;
 using ModelContextProtocol.Server;
 
-namespace OpenApiToMcp.Cli;
+namespace OpenApiToMcp;
 
 public class McpToolsProxy(IEnumerable<Endpoint> endpoints, string serverUrl, IAuthTokenGenerator authTokenGenerator)
 {

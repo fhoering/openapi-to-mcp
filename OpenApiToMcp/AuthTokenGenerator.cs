@@ -2,7 +2,7 @@
 using System.Text.Json.Nodes;
 using Microsoft.OpenApi.Models;
 
-namespace OpenApiToMcp.Cli;
+namespace OpenApiToMcp;
 
 public interface IAuthTokenGenerator
 {
