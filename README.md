@@ -1,28 +1,62 @@
-[![.NET Build](https://github.com/ouvreboite/openapi-to-mcp/actions/workflows/dotnet-build.yml/badge.svg)](https://github.com/ouvreboite/openapi-to-mcp/actions/workflows/dotnet-build.yml)
+[![.NET Build](https://github.com/ouvreboite/openapi-to-mcp/actions/workflows/build_and_test.yml/badge.svg)](https://github.com/ouvreboite/openapi-to-mcp/actions/workflows/build_and_test.yml)
 
 # openapi-to-mcp
- An MCP server for your API
 
-## using
+Use your OpenAPI specification to expose your API's endpoints as strongly typed tools.
 
-(for example on windows, in your Claude/VSCode MCP config)
+Example for https://petstore3.swagger.io/ 🎉
+
 ```json
 {
-    "mcpServers": {
-        "petstore": {
-            "command": "OpenApiToMcp.exe",
-            "args": [
-                "https://petstore3.swagger.io/api/v3/openapi.json"
-            ]
-        }
+  "mcpServers": {
+    "petstore": {
+      "command": "openapi-to-mcp",
+        "args": [
+          "https://petstore3.swagger.io/api/v3/openapi.json"
+        ]
     }
+  }
 }
 ```
 
-## building
 
+## Commands and arguments
+
+### Usage
+
+
+```bash
+OpenApiToMcp <open-api> [options]`
 ```
-cd OpenApiToMcp
-dotnet publish -c Release -r win-x64 --self-contained true -p:EnableCompressionInSingleFile=true  
-dotnet publish -c Release -r osx-arm64 --self-contained true -p:EnableCompressionInSingleFile=true  
+
+```bash
+<open-api>  You OpenAPI specification (URL or file) [required]
+-h, --host-override                                                        Host override
+-b, --bearer-token                                                         Bearer token
+-o, -o2, --oauth-2-grant-type <client_credentials|password|refresh_token>  OAuth2 flow to be used
+-o2.tu, --oauth-2-token-url                                                OAuth2 token endpoint URL (override the one defined in your OpenAPI for your chosen OAuth2 flow)
+-o2.ci, --oauth-2-client-id                                                OAuth2 client id (for the client_credentials grant_type)
+-o2.cs, --oauth-2-client-secret                                            OAuth2 client secret (for the client_credentials grant_type)
+-o2.rt, --oauth-2-refresh-token                                            OAuth2 refresh token (for the refresh_token grant_type)
+-o2.un, --oauth-2-username                                                 OAuth2 username (for the password grant_type)
+-o2.pw, --oauth-2-password                                                 OAuth2 password (for the password grant_type)
+-?, -h, --help                                                             Show help and usage information
+-v, --version                                                              Show version information
 ```
+
+## Features
+
+| Category              | Feature                | Support                                                                                                      | Details                                                                                                            |
+|-----------------------|------------------------|--------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| **OpenAPI**           | **Versions**           | v2.0, v3.0                                                                                                   |                                                                                                                    |
+|                       | **Formats**            | JSON, YAML                                                                                                   |                                                                                                                    |
+|                       | **Sources**            | file, URL                                                                                                    |                                                                                                                    |
+|                       | **$refs**              | Local, Remote                                                                                                |                                                                                                                    |
+|                       | **Base path**          | Use the first [server](https://swagger.io/docs/specification/v3_0/api-host-and-base-path/) URL               | Prepend with the source URL host if relative                                                                       |
+| **MCP**               | **Transport**          | SDTIO                                                                                                        |                                                                                                                    |
+|                       | **Tool's name**        | Use the [operationId](https://swagger.io/docs/specification/v3_0/paths-and-operations/#operationid)          | Fallback to `{httpMethod}_{escaped_path}`. ⚠️Tool names >64 chars long are discarded                               |
+|                       | **Tool's description** | Use the [operation](https://swagger.io/docs/specification/v3_0/paths-and-operations)'s description           | Fallback to [path](https://swagger.io/docs/specification/v3_0/paths-and-operations)'s description                  |
+|                       | **Inputs**             | Path params, Query params, JSON request bodies                                                               | Use the JSONSchema from the OpenAPI specification                                                                  |
+|                       | **Outputs**            | Textual responses (json, text, ...)                                                                          |                                                                                                                    |
+| **API Authorization** | **Bearer Token**       | As [Authorization](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Authorization) header |                                                                                                                    |
+|                       | **OAuth2**             | ClientCredentials, RefreshToken, Password                                                                    | Using the `tokenUrl` from the [securitySchemes](https://swagger.io/docs/specification/v3_0/authentication/oauth2/) |

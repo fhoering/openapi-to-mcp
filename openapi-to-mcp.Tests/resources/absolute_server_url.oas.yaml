@@ -1,0 +1,12 @@
+openapi: 3.0.4
+info:
+  title: MCP API
+  version: 1.0.26
+servers:
+  - url: https://absolute.com/v1
+paths:
+  /hello-wolrd:
+    get:
+      responses:
+        '200':
+          description: Successful operation

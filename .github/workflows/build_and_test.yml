@@ -1,4 +1,4 @@
-name: .NET Build
+name: Build and test
 
 on:
   push:
@@ -17,6 +17,8 @@ jobs:
         with:
           dotnet-version: 8.0.x # Adjust if your project uses a different .NET version
       - name: Restore dependencies
-        run: dotnet restore OpenApiToMcp/OpenApiToMcp.csproj
+        run: dotnet restore
       - name: Build
-        run: dotnet build OpenApiToMcp/OpenApiToMcp.csproj --no-restore
+        run: dotnet build --no-restore
+      - name: Test
+        run: dotnet test

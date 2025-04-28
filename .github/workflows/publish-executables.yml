@@ -1,0 +1,55 @@
+name: Publish executables
+
+on:
+  push:
+    tags:
+      - "v*" # Trigger on tags starting with 'v'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build and Publish CLI
+    permissions:
+      contents: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Verify Tag matches Project Version
+        run: |
+          TAG_VERSION=$(echo "${{ github.ref }}" | sed 's/refs\/tags\/v//')
+          PROJECT_VERSION=$(dotnet build openapi-to-mcp/openapi-to-mcp.csproj -getProperty:Version -nologo -v:q)
+          if [ "$TAG_VERSION" != "$PROJECT_VERSION" ]; then
+            echo "Error: Tag version ($TAG_VERSION) does not match project version ($PROJECT_VERSION)."
+            exit 1
+          fi
+          echo "PROJECT_VERSION=$PROJECT_VERSION" >> $GITHUB_ENV # Output the version to the environment
+        shell: bash
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x" # Adjust if needed
+
+      - name: Publish win-x64 CLI
+        run: dotnet publish openapi-to-mcp/openapi-to-mcp.csproj -c Release -r win-x64
+        shell: bash
+
+      - name: Rename win-x64 executable
+        run: mv ./openapi-to-mcp/bin/Release/net8.0/win-x64/publish/openapi-to-mcp.exe ./openapi-to-mcp/bin/Release/net8.0/win-x64/publish/openapi-to-mcp-${{ env.PROJECT_VERSION }}-win64.exe
+        shell: bash
+
+      - name: Publish osx-arm64 CLI
+        run: dotnet publish openapi-to-mcp/openapi-to-mcp.csproj -c Release -r osx-arm64
+        shell: bash
+
+      - name: Rename osx-arm64 executable
+        run: mv ./openapi-to-mcp/bin/Release/net8.0/osx-arm64/publish/openapi-to-mcp ./openapi-to-mcp/bin/Release/net8.0/osx-arm64/publish/openapi-to-mcp-${{ env.PROJECT_VERSION }}-osxarm64
+        shell: bash
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./openapi-to-mcp/bin/Release/net8.0/win-x64/publish/openapi-to-mcp-${{ env.PROJECT_VERSION }}-win64.exe
+            ./openapi-to-mcp/bin/Release/net8.0/osx-arm64/publish/openapi-to-mcp-${{ env.PROJECT_VERSION }}-osxarm64

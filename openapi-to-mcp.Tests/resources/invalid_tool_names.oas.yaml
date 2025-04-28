@@ -1,0 +1,40 @@
+openapi: 3.0.4
+info:
+  title: MCP API
+  version: 1.0.26
+servers:
+  - url: /api
+paths:
+  /valid-tool-name/{test}:
+    parameters:
+      - name: test
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: validOperationId
+      responses:
+        '200':
+          description: Successful operation
+    post:
+      responses:
+        '200':
+          description: Successful operation
+  /invalid-tool-name:
+    get:
+      operationId: SuperSuperSuperSuperLongOperationIdSoTheToolNameIsLongerThan64Chars
+      responses:
+        '200':
+          description: Successful operation
+  /invalid-tool-name-because-the-path-is-way-to-long/{long-parameter}:
+    post:
+      parameters:
+        - name: long-parameter
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
