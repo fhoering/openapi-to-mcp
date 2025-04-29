@@ -23,16 +23,17 @@ public class OpenApiParserTest
     public async Task Parse_DetectInvalidToolNames()
     {
         var (openApiDocument, diagnostic) = await new OpenApiParser().Parse("resources/invalid_tool_names.oas.yaml", hostOverride: null);
-        
         Assert.That(openApiDocument, Is.Not.Null);
+
         var operations = openApiDocument.Paths.SelectMany(p => p.Value.Operations.Values);
-        Assert.That(operations.Count(), Is.EqualTo(4));
+        Assert.That(operations.Count(), Is.EqualTo(5));
 
         var errorMessages = diagnostic.Errors.Select(e => e.Message);
         var expectedErrors = new[]
         {
             "Operation Post /invalid-tool-name-because-the-path-is-way-to-long/{long-parameter} translate to an invalid tool name: Post_invalid-tool-name-because-the-path-is-way-to-long_long-parameter",
-            "Operation Get /invalid-tool-name translate to an invalid tool name: SuperSuperSuperSuperLongOperationIdSoTheToolNameIsLongerThan64Chars"
+            "Operation Get /invalid-tool-name translate to an invalid tool name: SuperSuperSuperSuperLongOperationIdSoTheToolNameIsLongerThan64Chars",
+            "Operation Post /invalid-tool-name translate to an invalid tool name: Invalid tool name from x-mcp-tool-name"
         };
         
         Assert.That(errorMessages, Is.EquivalentTo(expectedErrors));

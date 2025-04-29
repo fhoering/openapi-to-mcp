@@ -6,6 +6,7 @@ servers:
   - url: /api
 paths:
   /valid-tool-name/{test}:
+    description: Some description
     parameters:
       - name: test
         in: path
@@ -24,6 +25,12 @@ paths:
   /invalid-tool-name:
     get:
       operationId: SuperSuperSuperSuperLongOperationIdSoTheToolNameIsLongerThan64Chars
+      responses:
+        '200':
+          description: Successful operation
+    post:
+      x-mcp-tool-name: "Invalid tool name from x-mcp-tool-name"
+      operationId: Valid
       responses:
         '200':
           description: Successful operation

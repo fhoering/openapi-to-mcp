@@ -88,22 +88,26 @@ public class McpToolsProxy{
         var endpoints = new List<EndpointTool>();
         foreach (var path in openApiDocument.Paths)
         {
-            foreach (var operation in path.Value.Operations)
+            foreach (var (operationType, operation) in path.Value.Operations)
             {
-                var toolName = McpToolNameUtils.ToolName(path.Key, operation.Key, operation.Value);
-                if (!McpToolNameUtils.ValidToolName.IsMatch(toolName))
+                if(!operation.McpToolEnabled())
                     continue;
+
+                var toolName = operation.McpToolName(path.Key, operationType);
+                if (!OpenApiUtils.ValidToolName.IsMatch(toolName))
+                    continue;
+
                 var tool = new Tool
                 {
-                    Description = operation.Value.Description ?? path.Value.Description,
-                    Name = McpToolNameUtils.ToolName(path.Key, operation.Key, operation.Value),
-                    InputSchema = BuildToolInputSchema(operation.Value, path.Value),
+                    Name =  toolName,
+                    Description = operation.McpToolDescription(path.Value),
+                    InputSchema = BuildToolInputSchema(operation, path.Value),
                     Annotations = new ToolAnnotations {
-                        Title = operation.Key.ToString().ToUpper() + " " + path.Key,
+                        Title = operationType.ToString().ToUpper() + " " + path.Key,
                     }
                 };
                 
-                endpoints.Add(new EndpointTool(tool, operation.Key, path.Key));
+                endpoints.Add(new EndpointTool(tool, operationType, path.Key));
             }
         }
 

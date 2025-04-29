@@ -49,27 +49,62 @@ Options:
   -o2.rt, --oauth-2-refresh-token              OAuth2 refresh token (for the refresh_token grant_type)
   -o2.un, --oauth-2-username                   OAuth2 username (for the password grant_type)
   -o2.pw, --oauth-2-password                   OAuth2 password (for the password grant_type)
+  -i, --instructions                           MCP instruction to be advertised by the server
   -?, -h, --help                               Show help and usage information
   -v, --version                                Show version information
 ```
 
-## Features
+## OpenAPI support
 
-| Category              | Feature                | Support                                                                                                      | Details                                                                                                            |
-|-----------------------|------------------------|--------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| **OpenAPI**           | **Versions**           | v2.0, v3.0                                                                                                   |                                                                                                                    |
-|                       | **Formats**            | JSON, YAML                                                                                                   |                                                                                                                    |
-|                       | **Sources**            | file, URL                                                                                                    |                                                                                                                    |
-|                       | **$refs**              | Local, Remote                                                                                                |                                                                                                                    |
-|                       | **Base path**          | Use the first [server](https://swagger.io/docs/specification/v3_0/api-host-and-base-path/) URL               | Prepend with the source URL host if relative                                                                       |
-| **MCP**               | **Transport**          | SDTIO                                                                                                        |                                                                                                                    |
-|                       | **Tool's name**        | Use the [operationId](https://swagger.io/docs/specification/v3_0/paths-and-operations/#operationid)          | Fallback to `{httpMethod}_{escaped_path}`. ⚠️Tool names >64 chars long are discarded                               |
-|                       | **Tool's description** | Use the [operation](https://swagger.io/docs/specification/v3_0/paths-and-operations)'s description           | Fallback to [path](https://swagger.io/docs/specification/v3_0/paths-and-operations)'s description                  |
-|                       | **Inputs**             | Path params, Query params, JSON request bodies                                                               | Use the JSONSchema from the OpenAPI specification                                                                  |
-|                       | **Outputs**            | Textual responses (json, text, ...)                                                                          |                                                                                                                    |
-| **API Authorization** | **Bearer Token**       | As [Authorization](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Authorization) header |                                                                                                                    |
-|                       | **OAuth2**             | ClientCredentials, RefreshToken, Password                                                                    | Using the `tokenUrl` from the [securitySchemes](https://swagger.io/docs/specification/v3_0/authentication/oauth2/) |
+- Currently, OpenAPI 2.0 and 3.0 are supported. 
+  - 3.1 is not (at least not until [microsoft/OpenAPI.NET](https://github.com/microsoft/OpenAPI.NET) supports it)
+- Specifications can be JSON/YAML and local (file) or remote (URL)
+- Only local $refs are supported
+
+### Custom extensions
+
+A set of custom extensions is available to customize how your API should be exposed:
+- `info.x-mcp-instructions` (string): Textual instructions exposed by the MCP server during the initialize handshake
+- `operation.x-mcp-tool-name` (string): Custom tool name
+- `operation.x-mcp-tool-description` (string): Custom tool description
+- `operation.x-mcp-tool-enabled` (boolean): Enabled/disabled a specific operation (enabled by default)
+
+## MCP features
+
+Only STDIO transport is currently supported.
+
+### Tools
+Operations ("endpoints") from your OpenAPI specification are translated to MCP [tools](https://modelcontextprotocol.io/docs/concepts/tools)
+- All path/query/JSON body parameters are exposed (using their JSON schema)
+- Response is returned as-is
+- Tools name are extracted as follows: `operation.x-mcp-tool-name` ?? [operation.operationId](https://swagger.io/docs/specification/v3_0/paths-and-operations/#operationid) ?? `{httpMethod}_{escaped_path}`
+  - ⚠️Tools are discarded if their name don't match `^[a-zA-Z0-9_-]{1,64}$`
+- Tools description are extracted as follows: `operation.x-mcp-tool-description` ?? `operation.description` ?? `path.description`
+
+### Tool call and host
+
+When a tool is called, the MCP server will call the underlying endpoint. To determine which host to call a combination of parameters are used:
+- the `--host-override` option
+- your specification first [server](https://swagger.io/docs/specification/v3_0/api-host-and-base-path/)'s URL if it's an absolute URL
+- the host of the remote OpenAPI provided
+- otherwise, an error is thrown
+
+For example running `openapi-to-mcp https://petstore3.swagger.io/api/v3/openapi.json`:
+- https://petstore3.swagger.io/api/v3/openapi.json defines a server, but its URL is relative (/api/v3)
+- so the host of the specification's own URL is used: https://petstore3.swagger.io and the relative path of the server is appended to it
+
+## Authorization
+
+### Bearer token
+
+A token can be provided as option `--bearer-token`. It'll be provided to all calls as the `Authorization: Bearer {token}` header.
+It'll also be provided when fetching a remote specification.
+
+### OAuth2
+
+ClientCredentials, RefreshToken, Password are supported.
+If your OpenAPI specification declare [securitySchemes](https://swagger.io/docs/specification/v3_0/authentication/oauth2/) for those flows, the corresponding `tokenUrl` will be used.
 
 ## How to publish
 
-Create a new tag/release
+Create a new tag/release 🤷

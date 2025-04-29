@@ -10,16 +10,35 @@ namespace openapi_to_mcp.Tests;
 public class McpToolsProxyTest
 {
     [Test]
-    public async Task ListTools_ShouldListValidEndpointsAndDiagnosticTool()
+    public async Task ListTools_ShouldListValidEndpointsOnly()
     {
         var (openApiDocument, diagnostic) =
             await new OpenApiParser().Parse("resources/invalid_tool_names.oas.yaml", hostOverride: null);
         var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator());
         var tools = await proxy.ListTools();
         Assert.That(tools, Is.Not.Null);
-        var toolNames = tools.Tools.Select(t => t.Name);
-        Assert.That(toolNames,
-            Is.EquivalentTo(new[] { "Post_valid-tool-name_test", "validOperationId" }));
+        var toolNamesAndDescriptions = tools.Tools.Select(t => (t.Name, t.Description));
+        Assert.That(toolNamesAndDescriptions, Is.EquivalentTo(new[]
+        {
+          ("validOperationId", "Some description"), 
+          ("Post_valid-tool-name_test", "Some description")
+        }));
+    }
+    
+    [Test]
+    public async Task ListTools_ShouldUseOpenApiExtensions()
+    {
+      var (openApiDocument, diagnostic) =
+        await new OpenApiParser().Parse("resources/extensions.oas.yaml", hostOverride: null);
+      var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator());
+      var tools = await proxy.ListTools();
+      Assert.That(tools, Is.Not.Null);
+      var toolNamesAndDescriptions = tools.Tools.Select(t => (t.Name, t.Description));
+      Assert.That(toolNamesAndDescriptions, Is.EquivalentTo(new[]
+      {
+        ("HelloWorldOld", "Greet users"), 
+        ("HelloWorldNew", "Happily greet users")
+      }));
     }
 
     [Test]

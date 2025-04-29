@@ -1,0 +1,47 @@
+openapi: 3.0.4
+info:
+  title: MCP API with OAS extensions
+  version: 1.0.26
+  x-mcp-instructions: |-
+    Do NOT use HelloWorldNew tool, it is not ready for production.
+    To greet a user, first ask their age. If they are minor, decline politely.
+servers:
+  - url: /api
+paths:
+  /greet/old:
+    get:
+      x-mcp-tool-name: GreetdOld
+      operationId: GreetUsers #x-mcp-tool-name should be used instead
+      description: Greet users
+      parameters:
+        - name: age
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Successful operation
+  /greet/new:
+    get:
+      operationId: GreetNew
+      x-mcp-tool-description: Happily greet users
+      description: Greet users #x-mcp-tool-description should be used instead
+      parameters:
+        - name: age
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Successful operation
+  /greet:
+    get:
+      x-mcp-tool-enabled: false
+      parameters:
+        - name: age
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Successful operation

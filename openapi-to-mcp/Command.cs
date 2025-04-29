@@ -39,6 +39,9 @@ public class Command
     
     [CliOption(Aliases = ["-o2.pw"], Description = $"OAuth2 password (for the {nameof(OAuth2GrantType.password)} grant_type)")]
     public string? Oauth2Password { get; set; } = null;
+    
+    [CliOption(Aliases = ["-i"], Description = $"MCP instruction to be advertised by the server")]
+    public string? Instructions { get; set; } = null;
  
     public async Task RunAsync()
     {
@@ -71,6 +74,7 @@ public class Command
                         Name = openApiDocument.Info?.Title ?? "API",
                         Version = openApiDocument.Info?.Version ?? "0.0",
                     };
+                    serverOptions.ServerInstructions = Instructions ?? openApiDocument.Info?.McpInstructions();
                 })
                 .WithStdioServerTransport()
                 .WithListToolsHandler((context, token) => proxy.ListTools())
