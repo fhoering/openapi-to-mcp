@@ -15,15 +15,10 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Verify Tag matches Project Version
+      - name: Extract Version from Tag
         run: |
           TAG_VERSION=$(echo "${{ github.ref }}" | sed 's/refs\/tags\/v//')
-          PROJECT_VERSION=$(dotnet build openapi-to-mcp/openapi-to-mcp.csproj -getProperty:Version -nologo -v:q)
-          if [ "$TAG_VERSION" != "$PROJECT_VERSION" ]; then
-            echo "Error: Tag version ($TAG_VERSION) does not match project version ($PROJECT_VERSION)."
-            exit 1
-          fi
-          echo "PROJECT_VERSION=$PROJECT_VERSION" >> $GITHUB_ENV # Output the version to the environment
+          echo "PROJECT_VERSION=$TAG_VERSION" >> $GITHUB_ENV # Output the version to the environment
         shell: bash
 
       - name: Setup .NET
@@ -32,7 +27,7 @@ jobs:
           dotnet-version: "8.0.x" # Adjust if needed
 
       - name: Publish win-x64 CLI
-        run: dotnet publish openapi-to-mcp/openapi-to-mcp.csproj -c Release -r win-x64
+        run: dotnet publish openapi-to-mcp/openapi-to-mcp.csproj -c Release -r win-x64 -p:Version=${{ env.PROJECT_VERSION }} --self-contained true -p:PublishSingleFile=true
         shell: bash
 
       - name: Rename win-x64 executable
@@ -40,11 +35,19 @@ jobs:
         shell: bash
 
       - name: Publish osx-arm64 CLI
-        run: dotnet publish openapi-to-mcp/openapi-to-mcp.csproj -c Release -r osx-arm64
+        run: dotnet publish openapi-to-mcp/openapi-to-mcp.csproj -c Release -r osx-arm64 -p:Version=${{ env.PROJECT_VERSION }} --self-contained true -p:PublishSingleFile=true
         shell: bash
 
       - name: Rename osx-arm64 executable
         run: mv ./openapi-to-mcp/bin/Release/net8.0/osx-arm64/publish/openapi-to-mcp ./openapi-to-mcp/bin/Release/net8.0/osx-arm64/publish/openapi-to-mcp-${{ env.PROJECT_VERSION }}-osxarm64
+        shell: bash
+
+      - name: Pack CLI
+        run: dotnet pack openapi-to-mcp/openapi-to-mcp.csproj --configuration Release -p:Version=${{ env.PROJECT_VERSION }} -o ./nupkg
+        shell: bash
+
+      - name: Publish to NuGet
+        run: dotnet nuget push ./nupkg/openapi-to-mcp.${{ env.PROJECT_VERSION }}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
         shell: bash
 
       - name: Create Release and Upload Assets
