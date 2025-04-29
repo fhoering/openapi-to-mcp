@@ -36,8 +36,8 @@ public class McpToolsProxyTest
       var toolNamesAndDescriptions = tools.Tools.Select(t => (t.Name, t.Description));
       Assert.That(toolNamesAndDescriptions, Is.EquivalentTo(new[]
       {
-        ("HelloWorldOld", "Greet users"), 
-        ("HelloWorldNew", "Happily greet users")
+        ("GreetdOld", "Greet users"), 
+        ("GreetNew", "Happily greet users")
       }));
     }
 

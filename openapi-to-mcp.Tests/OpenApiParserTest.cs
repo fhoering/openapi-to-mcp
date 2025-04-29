@@ -8,7 +8,7 @@ public class OpenApiParserTest
     [TestCase("https://petstore3.swagger.io/api/v3/openapi.json", 19)] //remote
     [TestCase("resources/petstore3.oas.yaml", 19)] //local YAML v3
     [TestCase("resources/petstore2.oas.json", 20)] //local JSON v2
-    public async Task Parse_ShoudParseRemoteOrFileAndJsonOrYaml(string openapiFileOrUrl, int expectedOperations)
+    public async Task Parse_ShouldParseRemoteOrFileAndJsonOrYaml(string openapiFileOrUrl, int expectedOperations)
     {
         var (openApiDocument, diagnostic) = await new OpenApiParser().Parse(openapiFileOrUrl, hostOverride: null);
         
