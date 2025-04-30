@@ -1,4 +1,6 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Diagnostics;
+using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Interfaces;
@@ -11,7 +13,7 @@ namespace OpenApiToMcp;
 
 public class OpenApiParser
 {
-    public async Task<(OpenApiDocument,OpenApiDiagnostic)> Parse(string openapiFileOrUrl, string? hostOverride, string? bearerToken = null)
+    public async Task<(OpenApiDocument,OpenApiDiagnostic)> Parse(string openapiFileOrUrl, string? hostOverride, string? bearerToken)
     {
         //if starts with http, treat as url
         string? openApiDocumentAsString;
@@ -19,10 +21,9 @@ public class OpenApiParser
         if (openapiFileOrUrl.StartsWith("http"))
         {
             host = new Uri(openapiFileOrUrl, UriKind.Absolute).GetLeftPart(UriPartial.Authority);
-            var httpClient = new HttpClient();
-            if(bearerToken != null){
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
-            }
+            var httpClient = new HttpClient()
+                .WithOpenApiToMcpUserAgent()
+                .WithBearerToken(bearerToken);
             var stream = await httpClient.GetStreamAsync(openapiFileOrUrl);
             openApiDocumentAsString = await new StreamReader(stream).ReadToEndAsync();
         }

@@ -13,7 +13,7 @@ public class McpToolsProxyTest
     public async Task ListTools_ShouldListValidEndpointsOnly()
     {
         var (openApiDocument, diagnostic) =
-            await new OpenApiParser().Parse("resources/invalid_tool_names.oas.yaml", hostOverride: null);
+            await new OpenApiParser().Parse("resources/invalid_tool_names.oas.yaml", hostOverride: null, bearerToken: null);
         var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator());
         var tools = await proxy.ListTools();
         Assert.That(tools, Is.Not.Null);
@@ -29,7 +29,7 @@ public class McpToolsProxyTest
     public async Task ListTools_ShouldUseOpenApiExtensions()
     {
       var (openApiDocument, diagnostic) =
-        await new OpenApiParser().Parse("resources/extensions.oas.yaml", hostOverride: null);
+        await new OpenApiParser().Parse("resources/extensions.oas.yaml", hostOverride: null, bearerToken: null);
       var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator());
       var tools = await proxy.ListTools();
       Assert.That(tools, Is.Not.Null);
@@ -45,7 +45,7 @@ public class McpToolsProxyTest
     public async Task Petstore_Example_addPet()
     {
         var (openApiDocument, diagnostic) =
-            await new OpenApiParser().Parse("resources/petstore3.oas.yaml", hostOverride: null);
+            await new OpenApiParser().Parse("resources/petstore3.oas.yaml", hostOverride: null, bearerToken: null);
         var proxy = new McpToolsProxy(openApiDocument, "https://petstore3.swagger.io/api/v3", new NoAuthTokenGenerator());
 
         //List tools

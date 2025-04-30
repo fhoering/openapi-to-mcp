@@ -10,7 +10,7 @@ public class OpenApiParserTest
     [TestCase("resources/petstore2.oas.json", 20)] //local JSON v2
     public async Task Parse_ShouldParseRemoteOrFileAndJsonOrYaml(string openapiFileOrUrl, int expectedOperations)
     {
-        var (openApiDocument, diagnostic) = await new OpenApiParser().Parse(openapiFileOrUrl, hostOverride: null);
+        var (openApiDocument, diagnostic) = await new OpenApiParser().Parse(openapiFileOrUrl, hostOverride: null, bearerToken: null);
         
         Assert.That(openApiDocument, Is.Not.Null);
         var operations = openApiDocument.Paths.SelectMany(p => p.Value.Operations.Values);
@@ -22,7 +22,7 @@ public class OpenApiParserTest
     [Test]
     public async Task Parse_DetectInvalidToolNames()
     {
-        var (openApiDocument, diagnostic) = await new OpenApiParser().Parse("resources/invalid_tool_names.oas.yaml", hostOverride: null);
+        var (openApiDocument, diagnostic) = await new OpenApiParser().Parse("resources/invalid_tool_names.oas.yaml", hostOverride: null, bearerToken: null);
         Assert.That(openApiDocument, Is.Not.Null);
 
         var operations = openApiDocument.Paths.SelectMany(p => p.Value.Operations.Values);
@@ -50,7 +50,7 @@ public class OpenApiParserTest
     [TestCase("resources/absolute_server_url.oas.yaml", "https://other-host.com", "https://other-host.com/v1")]
     public async Task Parse_ShouldInferServerHostAndAllowOverride(string openapiFileOrUrl, string? hostOverride, string expectedServerUrl)
     {
-        var (openApiDocument, diagnostic) = await new OpenApiParser().Parse(openapiFileOrUrl, hostOverride);
+        var (openApiDocument, diagnostic) = await new OpenApiParser().Parse(openapiFileOrUrl, hostOverride, bearerToken: null);
         
         Assert.That(openApiDocument, Is.Not.Null);
         var serverUrl = openApiDocument.Servers.First().Url;

@@ -5,7 +5,6 @@ using System.Web;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Extensions;
 using Microsoft.OpenApi.Models;
-using Microsoft.OpenApi.Readers;
 using ModelContextProtocol.Protocol.Types;
 using ModelContextProtocol.Server;
 
@@ -48,11 +47,9 @@ public class McpToolsProxy{
                 throw new Exception("Shouldn't be called without a tool name");
 
             var token = await _authTokenGenerator.GetToken();
-            var httpClient = new HttpClient();
-            if (token != null)
-            {
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            }
+            var httpClient = new HttpClient()
+                .WithOpenApiToMcpUserAgent()
+                .WithBearerToken(token);
         
             var endpoint = _endpointTools.First(endpoint => endpoint.tool.Name == context.Params.Name);
             var uri = InjectPathParams(_serverUrl + endpoint.path, context.Params.Arguments);
