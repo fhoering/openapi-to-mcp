@@ -1,4 +1,5 @@
 [![.NET Build](https://github.com/ouvreboite/openapi-to-mcp/actions/workflows/build_and_test.yml/badge.svg)](https://github.com/ouvreboite/openapi-to-mcp/actions/workflows/build_and_test.yml)
+[![NuGet](https://img.shields.io/nuget/dt/openapi-to-mcp?logo=nuget&label=NuGet&)](https://www.nuget.org/packages/openapi-to-mcp)
 
 # openapi-to-mcp
 
