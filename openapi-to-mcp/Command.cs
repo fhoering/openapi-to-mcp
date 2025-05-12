@@ -22,22 +22,22 @@ public class Command
     [CliOption(Aliases = ["-o2"], Description = "OAuth2 flow to be used")]
     public OAuth2GrantType? Oauth2GrantType { get; set; } = null;
 
-    [CliOption(Aliases = ["-o2.tu"], Description = "OAuth2 token endpoint URL (override the one defined in your OpenAPI for your chosen OAuth2 flow)"),]
+    [CliOption(Aliases = ["-o2_tu"], Description = "OAuth2 token endpoint URL (override the one defined in your OpenAPI for your chosen OAuth2 flow)"),]
     public string? Oauth2TokenUrl { get; set; } = null;
     
-    [CliOption(Aliases = ["-o2.ci"], Description = $"OAuth2 client id (for the {nameof(OAuth2GrantType.client_credentials)} grant_type)")]
+    [CliOption(Aliases = ["-o2_ci"], Description = $"OAuth2 client id (for the {nameof(OAuth2GrantType.client_credentials)} grant_type)")]
     public string? Oauth2ClientId { get; set; } = null;
     
-    [CliOption(Aliases = ["-o2.cs"], Description = $"OAuth2 client secret (for the {nameof(OAuth2GrantType.client_credentials)} grant_type)")]
+    [CliOption(Aliases = ["-o2_cs"], Description = $"OAuth2 client secret (for the {nameof(OAuth2GrantType.client_credentials)} grant_type)")]
     public string? Oauth2ClientSecret { get; set; } = null;
 
-    [CliOption(Aliases = ["-o2.rt"], Description = $"OAuth2 refresh token (for the {nameof(OAuth2GrantType.refresh_token)} grant_type)")]
+    [CliOption(Aliases = ["-o2_rt"], Description = $"OAuth2 refresh token (for the {nameof(OAuth2GrantType.refresh_token)} grant_type)")]
     public string? Oauth2RefreshToken { get; set; } = null;
 
-    [CliOption(Aliases = ["-o2.un"], Description = $"OAuth2 username (for the {nameof(OAuth2GrantType.password)} grant_type)")]
+    [CliOption(Aliases = ["-o2_un"], Description = $"OAuth2 username (for the {nameof(OAuth2GrantType.password)} grant_type)")]
     public string? Oauth2Username { get; set; } = null;
     
-    [CliOption(Aliases = ["-o2.pw"], Description = $"OAuth2 password (for the {nameof(OAuth2GrantType.password)} grant_type)")]
+    [CliOption(Aliases = ["-o2_pw"], Description = $"OAuth2 password (for the {nameof(OAuth2GrantType.password)} grant_type)")]
     public string? Oauth2Password { get; set; } = null;
     
     [CliOption(Aliases = ["-i"], Description = $"MCP instruction to be advertised by the server")]

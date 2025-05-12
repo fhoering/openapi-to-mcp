@@ -43,13 +43,13 @@ Options:
   -b, --bearer-token                           Bearer token
   -o, -o2, --oauth-2-grant-type                OAuth2 flow to be used
   <client_credentials|password|refresh_token>
-  -o2.tu, --oauth-2-token-url                  OAuth2 token endpoint URL (override the one defined in your OpenAPI for
+  -o2_tu, --oauth-2-token-url                  OAuth2 token endpoint URL (override the one defined in your OpenAPI for
                                                your chosen OAuth2 flow)
-  -o2.ci, --oauth-2-client-id                  OAuth2 client id (for the client_credentials grant_type)
-  -o2.cs, --oauth-2-client-secret              OAuth2 client secret (for the client_credentials grant_type)
-  -o2.rt, --oauth-2-refresh-token              OAuth2 refresh token (for the refresh_token grant_type)
-  -o2.un, --oauth-2-username                   OAuth2 username (for the password grant_type)
-  -o2.pw, --oauth-2-password                   OAuth2 password (for the password grant_type)
+  -o2_ci, --oauth-2-client-id                  OAuth2 client id (for the client_credentials grant_type)
+  -o2_cs, --oauth-2-client-secret              OAuth2 client secret (for the client_credentials grant_type)
+  -o2_rt, --oauth-2-refresh-token              OAuth2 refresh token (for the refresh_token grant_type)
+  -o2_un, --oauth-2-username                   OAuth2 username (for the password grant_type)
+  -o2_pw, --oauth-2-password                   OAuth2 password (for the password grant_type)
   -i, --instructions                           MCP instruction to be advertised by the server
   -?, -h, --help                               Show help and usage information
   -v, --version                                Show version information
@@ -62,7 +62,7 @@ Options:
 - Specifications can be JSON/YAML and local (file) or remote (URL)
 - Only local $refs are supported
 
-### Custom extensions
+### OpenAPI custom extensions
 
 A set of custom extensions is available to customize how your API should be exposed:
 - `info.x-mcp-instructions` (string): Textual instructions exposed by the MCP server during the initialize handshake
