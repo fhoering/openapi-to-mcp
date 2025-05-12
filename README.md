@@ -20,6 +20,28 @@ Basic example for https://petstore3.swagger.io/ 🎉
 }
 ```
 
+More complex example, using Github's API:
+```
+{
+    "mcpServers": {
+        "github": {
+            "command": "openapi-to-mcp",
+            "args": [
+                "https://raw.githubusercontent.com/github/rest-api-description/refs/heads/main/descriptions/api.github.com/api.github.com.yaml",
+                "--bearer-token",
+                "github_pat_xxxxxx",
+                "--tool-naming-strategy",
+                "verbandpath"
+            ]
+        }
+    }
+}
+```
+
+This example use the bearer token auth (with a Github [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic)) and force the tool naming strategy to "verb and path", as Github's operation ids are not valid tool names.
+
+![Github demo](github_demo.gif)
+
 ## Install
 
 As a Nuget tool: [openapi-to-mcp](https://www.nuget.org/packages/openapi-to-mcp)
