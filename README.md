@@ -42,7 +42,7 @@ Options:
   -t, --tool-naming-strategy <extension|extension_or_operationid_or_verbandpath|operationid|verbandpath>  How the tool name should be computed [default: extension_or_operationid_or_verbandpath]
   -h, --host-override                                                                                     Host override
   -b, --bearer-token                                                                                      Bearer token
-  -o, -o2, --oauth-2-grant-type <client_credentials|password|refresh_token>                               OAuth2 flow to be used
+  -o2, --oauth-2-grant-type <client_credentials|password|refresh_token>                                   OAuth2 flow to be used
   -o2_tu, --oauth-2-token-url                                                                             OAuth2 token endpoint URL (override the one defined in your OpenAPI for your chosen OAuth2 flow)
   -o2_ci, --oauth-2-client-id                                                                             OAuth2 client id (for the client_credentials grant_type)
   -o2_cs, --oauth-2-client-secret                                                                         OAuth2 client secret (for the client_credentials grant_type)
@@ -50,8 +50,9 @@ Options:
   -o2_un, --oauth-2-username                                                                              OAuth2 username (for the password grant_type)
   -o2_pw, --oauth-2-password                                                                              OAuth2 password (for the password grant_type)
   -i, --instructions                                                                                      MCP instruction to be advertised by the server
+  --verbose                                                                                               Log more info (in sdterr) [default: False]
   -?, -h, --help                                                                                          Show help and usage information
-  -v, --version                                                                                           Show version information
+  --version                                                                                               Show version information
 ```
 
 ## OpenAPI support

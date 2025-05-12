@@ -7,7 +7,7 @@ using ModelContextProtocol.Protocol.Types;
 namespace OpenApiToMcp;
 
 
-[CliCommand(Description = "An on-the-fly OpenAPI MCP server")]
+[CliCommand(Description = "An on-the-fly OpenAPI MCP server", ShortFormAutoGenerate = false)]
 public class Command
 {
     [CliArgument(Description = "You OpenAPI specification (URL or file)")]
@@ -43,8 +43,11 @@ public class Command
     [CliOption(Aliases = ["-o2_pw"], Description = $"OAuth2 password (for the {nameof(OAuth2GrantType.password)} grant_type)")]
     public string? Oauth2Password { get; set; } = null;
     
-    [CliOption(Aliases = ["-i"], Description = $"MCP instruction to be advertised by the server")]
+    [CliOption(Aliases = ["-i"], Description = "MCP instruction to be advertised by the server")]
     public string? Instructions { get; set; } = null;
+    
+    [CliOption(Description = "Log more info (in sdterr)")]
+    public bool Verbose { get; set; } = false;
  
     public async Task RunAsync()
     {
@@ -53,7 +56,8 @@ public class Command
             //Setup
             var (openApiDocument, diagnostic) = await new OpenApiParser().Parse(OpenApi, HostOverride, BearerToken, ToolNamingStrategy);
             diagnostic.Errors?.ToList().ForEach(e => Console.Error.WriteLine(e));
-            diagnostic.Warnings?.ToList().ForEach(e => Console.Error.WriteLine(e));
+            if(Verbose)
+                diagnostic.Warnings?.ToList().ForEach(e => Console.Error.WriteLine(e));
             var serverUrl = openApiDocument.Servers?.FirstOrDefault()?.Url;
             if (string.IsNullOrEmpty(serverUrl) || !Uri.TryCreate(serverUrl, UriKind.Absolute, out _))
             {
@@ -61,7 +65,7 @@ public class Command
                 return;
             }
             var auth = IAuthTokenGenerator.Build(openApiDocument, this);
-            var proxy = new McpToolsProxy(openApiDocument, serverUrl, auth, ToolNamingStrategy);
+            var proxy = new McpToolsProxy(openApiDocument, serverUrl, auth, ToolNamingStrategy, Verbose);
             
             //MCP server
             var builder = Host.CreateApplicationBuilder();

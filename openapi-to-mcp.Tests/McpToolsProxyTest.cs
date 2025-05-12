@@ -13,8 +13,8 @@ public class McpToolsProxyTest
     public async Task ListTools_ShouldListValidEndpointsOnly()
     {
         var (openApiDocument, diagnostic) =
-            await new OpenApiParser().Parse("resources/invalid_tool_names.oas.yaml", hostOverride: null, bearerToken: null, toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
-        var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator(), toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
+            await new OpenApiParser().Parse("resources/invalid_tool_names.oas.yaml", hostOverride: null, bearerToken: null, toolNamingStrategy: default);
+        var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator(), toolNamingStrategy: default, verbose: false);
         var tools = await proxy.ListTools();
         Assert.That(tools, Is.Not.Null);
         var toolNamesAndDescriptions = tools.Tools.Select(t => (t.Name, t.Description));
@@ -29,8 +29,8 @@ public class McpToolsProxyTest
     public async Task ListTools_ShouldUseOpenApiExtensions()
     {
       var (openApiDocument, diagnostic) =
-        await new OpenApiParser().Parse("resources/extensions.oas.yaml", hostOverride: null, bearerToken: null,  toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
-      var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator(),  toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
+        await new OpenApiParser().Parse("resources/extensions.oas.yaml", hostOverride: null, bearerToken: null,  toolNamingStrategy: default);
+      var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator(), toolNamingStrategy: default, verbose: false);
       var tools = await proxy.ListTools();
       Assert.That(tools, Is.Not.Null);
       var toolNamesAndDescriptions = tools.Tools.Select(t => (t.Name, t.Description));
@@ -48,7 +48,7 @@ public class McpToolsProxyTest
     public async Task ListTools_ShouldFollowToolNamingStrategy(ToolNamingStrategy strategy, params string[] expectedToolsNames)
     {
       var (openApiDocument, diagnostic) = await new OpenApiParser().Parse("resources/extensions.oas.yaml", hostOverride: null, bearerToken: null,  toolNamingStrategy: strategy);
-      var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator(),  toolNamingStrategy: strategy);
+      var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator(),toolNamingStrategy: strategy, verbose: false);
       var tools = await proxy.ListTools();
       Assert.That(tools, Is.Not.Null);
       var toolNames = tools.Tools.Select(t => t.Name);
@@ -59,8 +59,8 @@ public class McpToolsProxyTest
     public async Task Petstore_Example_addPet()
     {
         var (openApiDocument, diagnostic) =
-            await new OpenApiParser().Parse("resources/petstore3.oas.yaml", hostOverride: null, bearerToken: null,  toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
-        var proxy = new McpToolsProxy(openApiDocument, "https://petstore3.swagger.io/api/v3", new NoAuthTokenGenerator(),  toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
+            await new OpenApiParser().Parse("resources/petstore3.oas.yaml", hostOverride: null, bearerToken: null,  toolNamingStrategy: default);
+        var proxy = new McpToolsProxy(openApiDocument, "https://petstore3.swagger.io/api/v3", new NoAuthTokenGenerator(),  toolNamingStrategy: default, verbose: false);
 
         //List tools
         var tools = await proxy.ListTools();

@@ -13,25 +13,23 @@ namespace OpenApiToMcp;
 
 public record EndpointTool(Tool tool, OperationType httpMethod, string path);
 
-public class McpToolsProxy{
-    private IEnumerable<EndpointTool> _endpointTools;
-    private string _serverUrl;
-    private IAuthTokenGenerator _authTokenGenerator;
-    
+public class McpToolsProxy(OpenApiDocument openApiDocument, string serverUrl, IAuthTokenGenerator tokenGenerator, ToolNamingStrategy toolNamingStrategy, bool verbose)
+{
+    private readonly IEnumerable<EndpointTool> _endpointTools = ExtractTools(openApiDocument, toolNamingStrategy);
     private const string BodyParameterName = "body";
-
-    public McpToolsProxy(OpenApiDocument openApiDocument, string serverUrl, IAuthTokenGenerator tokenGenerator, ToolNamingStrategy toolNamingStrategy)
-    {
-        _endpointTools = ExtractTools(openApiDocument, toolNamingStrategy);
-        _serverUrl = serverUrl;
-        _authTokenGenerator = tokenGenerator;
-    }
 
     public ValueTask<ListToolsResult> ListTools()
     {     
+        
         var tools = _endpointTools
             .Select(e => e.tool)
             .ToList();
+
+        if (verbose)
+        {
+            Console.Error.WriteLine($"ListTools: {tools.Count}");
+            tools.ForEach(t => Console.Error.WriteLine(t.Name));
+        }
 
         return new ValueTask<ListToolsResult>(new ListToolsResult()
         {
@@ -43,24 +41,37 @@ public class McpToolsProxy{
     {
         try
         {
+            if (verbose)
+            {
+                Console.Error.WriteLine($"CallTool: {context.Params?.Name}");
+            }
             if(context.Params == null)
                 throw new Exception("Shouldn't be called without a tool name");
 
-            var token = await _authTokenGenerator.GetToken();
+            var token = await tokenGenerator.GetToken();
             var httpClient = new HttpClient()
                 .WithOpenApiToMcpUserAgent()
                 .WithBearerToken(token);
         
             var endpoint = _endpointTools.First(endpoint => endpoint.tool.Name == context.Params.Name);
-            var uri = InjectPathParams(_serverUrl + endpoint.path, context.Params.Arguments);
+            var uri = InjectPathParams(serverUrl + endpoint.path, context.Params.Arguments);
             var method = HttpMethod.Parse(endpoint.httpMethod.ToString());
             var request = new HttpRequestMessage(method, uri);
             if (context.Params.Arguments != null && context.Params.Arguments.TryGetValue("body", out var body))
             {
                 request.Content = new StringContent(body.ToString(), new MediaTypeHeaderValue("application/json"));
             }
+            if (verbose)
+            {
+                Console.Error.WriteLine($"Calling: {method} {uri}");
+            }
             var response = await httpClient.SendAsync(request);
             var responseString = await response.Content.ReadAsStringAsync();
+            if (verbose)
+            {
+                Console.Error.WriteLine($"Response status: {response.StatusCode}");
+                Console.Error.WriteLine($"Response: {responseString}");
+            }
             if (!response.IsSuccessStatusCode)
                 return CallError($"Called {method} {uri} with status {response.StatusCode}", responseString);
 
