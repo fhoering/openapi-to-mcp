@@ -5,7 +5,7 @@
 
 Use your OpenAPI specification to expose your API's endpoints as strongly typed tools.
 
-Example for https://petstore3.swagger.io/ 🎉
+Basic example for https://petstore3.swagger.io/ 🎉
 
 ```json
 {
@@ -39,20 +39,19 @@ Arguments:
   <open-api>  You OpenAPI specification (URL or file) [required]
 
 Options:
-  -h, --host-override                          Host override
-  -b, --bearer-token                           Bearer token
-  -o, -o2, --oauth-2-grant-type                OAuth2 flow to be used
-  <client_credentials|password|refresh_token>
-  -o2_tu, --oauth-2-token-url                  OAuth2 token endpoint URL (override the one defined in your OpenAPI for
-                                               your chosen OAuth2 flow)
-  -o2_ci, --oauth-2-client-id                  OAuth2 client id (for the client_credentials grant_type)
-  -o2_cs, --oauth-2-client-secret              OAuth2 client secret (for the client_credentials grant_type)
-  -o2_rt, --oauth-2-refresh-token              OAuth2 refresh token (for the refresh_token grant_type)
-  -o2_un, --oauth-2-username                   OAuth2 username (for the password grant_type)
-  -o2_pw, --oauth-2-password                   OAuth2 password (for the password grant_type)
-  -i, --instructions                           MCP instruction to be advertised by the server
-  -?, -h, --help                               Show help and usage information
-  -v, --version                                Show version information
+  -t, --tool-naming-strategy <extension|extension_or_operationid_or_verbandpath|operationid|verbandpath>  How the tool name should be computed [default: extension_or_operationid_or_verbandpath]
+  -h, --host-override                                                                                     Host override
+  -b, --bearer-token                                                                                      Bearer token
+  -o, -o2, --oauth-2-grant-type <client_credentials|password|refresh_token>                               OAuth2 flow to be used
+  -o2_tu, --oauth-2-token-url                                                                             OAuth2 token endpoint URL (override the one defined in your OpenAPI for your chosen OAuth2 flow)
+  -o2_ci, --oauth-2-client-id                                                                             OAuth2 client id (for the client_credentials grant_type)
+  -o2_cs, --oauth-2-client-secret                                                                         OAuth2 client secret (for the client_credentials grant_type)
+  -o2_rt, --oauth-2-refresh-token                                                                         OAuth2 refresh token (for the refresh_token grant_type)
+  -o2_un, --oauth-2-username                                                                              OAuth2 username (for the password grant_type)
+  -o2_pw, --oauth-2-password                                                                              OAuth2 password (for the password grant_type)
+  -i, --instructions                                                                                      MCP instruction to be advertised by the server
+  -?, -h, --help                                                                                          Show help and usage information
+  -v, --version                                                                                           Show version information
 ```
 
 ## OpenAPI support
@@ -78,7 +77,8 @@ Only STDIO transport is currently supported.
 Operations ("endpoints") from your OpenAPI specification are translated to MCP [tools](https://modelcontextprotocol.io/docs/concepts/tools)
 - All path/query/JSON body parameters are exposed (using their JSON schema)
 - Response is returned as-is
-- Tools name are extracted as follows: `operation.x-mcp-tool-name` ?? [operation.operationId](https://swagger.io/docs/specification/v3_0/paths-and-operations/#operationid) ?? `{httpMethod}_{escaped_path}`
+- By default, the tool name is computed using first the `operation.x-mcp-tool-name` extension, then the [operation.operationId](https://swagger.io/docs/specification/v3_0/paths-and-operations/#operationid) and then `{httpMethod}_{escaped_path}`
+  - The tool naming strategy can be defined via the `--tool-naming-strategy` option.
   - ⚠️Tools are discarded if their name don't match `^[a-zA-Z0-9_-]{1,64}$`
 - Tools description are extracted as follows: `operation.x-mcp-tool-description` ?? `operation.description` ?? `path.description`
 

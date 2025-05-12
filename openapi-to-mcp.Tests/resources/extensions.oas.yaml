@@ -10,9 +10,9 @@ servers:
 paths:
   /greet/old:
     get:
-      x-mcp-tool-name: GreetdOld
-      operationId: GreetUsers #x-mcp-tool-name should be used instead
-      description: Greet users
+      x-mcp-tool-name: GreetOld_FromExtension
+      operationId: GreetOld_FromOperationId #x-mcp-tool-name should be used instead
+      description: From get /greet/old operation description
       parameters:
         - name: age
           in: query
@@ -23,9 +23,9 @@ paths:
           description: Successful operation
   /greet/new:
     get:
-      operationId: GreetNew
-      x-mcp-tool-description: Happily greet users
-      description: Greet users #x-mcp-tool-description should be used instead
+      operationId: GreetNew_FromOperationId
+      x-mcp-tool-description: From get /greet/new extension description
+      description: From get /greet/new operation description #x-mcp-tool-description should be used instead
       parameters:
         - name: age
           in: query

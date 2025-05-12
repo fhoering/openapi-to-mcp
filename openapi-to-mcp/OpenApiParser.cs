@@ -13,7 +13,7 @@ namespace OpenApiToMcp;
 
 public class OpenApiParser
 {
-    public async Task<(OpenApiDocument,OpenApiDiagnostic)> Parse(string openapiFileOrUrl, string? hostOverride, string? bearerToken)
+    public async Task<(OpenApiDocument,OpenApiDiagnostic)> Parse(string openapiFileOrUrl, string? hostOverride, string? bearerToken, ToolNamingStrategy toolNamingStrategy)
     {
         //if starts with http, treat as url
         string? openApiDocumentAsString;
@@ -35,7 +35,8 @@ public class OpenApiParser
         }
         
         //read and convert local refs
-        var openApiDocumentWithRef = new OpenApiStringReader(new OpenApiReaderSettings{RuleSet = RuleSet() }).Read(openApiDocumentAsString, out var diagnostic);
+        var openApiDocumentWithRef = new OpenApiStringReader(new OpenApiReaderSettings { RuleSet = RuleSet(toolNamingStrategy)})
+            .Read(openApiDocumentAsString, out var diagnostic);
         var openApiDocumentWithoutRefAsString = new StringWriter();
         openApiDocumentWithRef.SerializeAsV3(new OpenApiJsonWriter(
             openApiDocumentWithoutRefAsString,
@@ -61,10 +62,10 @@ public class OpenApiParser
         return (openApiDocument,diagnostic);
     }
 
-    private ValidationRuleSet RuleSet()
+    private ValidationRuleSet RuleSet(ToolNamingStrategy toolNamingStrategy)
     {
         var rules = ValidationRuleSet.GetDefaultRuleSet().Rules;
-        rules.Add(OpenApiUtils.OperationMustTranslateToValidToolName);
+        rules.Add(OpenApiUtils.OperationMustTranslateToValidToolName(toolNamingStrategy));
         rules.Add(OpenApiUtils.ExtensionHasValidType<OpenApiInfo,OpenApiString>(OpenApiUtils.XMcpInstructions));
         rules.Add(OpenApiUtils.ExtensionHasValidType<OpenApiOperation,OpenApiString>(OpenApiUtils.XMcpToolName));
         rules.Add(OpenApiUtils.ExtensionHasValidType<OpenApiOperation,OpenApiString>(OpenApiUtils.XMcpToolDescription));
@@ -74,14 +75,14 @@ public class OpenApiParser
 }
 
 public static class OpenApiUtils{
-    
-    public static readonly Regex ValidToolName = new("^[a-zA-Z0-9_-]{1,64}$");
+    private const int ToolNameMaxLength = 64;
+    public static readonly Regex ValidToolName = new("^[a-zA-Z0-9_-]{1,"+ToolNameMaxLength+"}$");
     public const string XMcpInstructions = "x-mcp-instructions";
     public const string XMcpToolName = "x-mcp-tool-name";
     public const string XMcpToolDescription = "x-mcp-tool-description";
     public const string XMcpToolEnabled = "x-mcp-tool-enabled";
 
-    public static ValidationRule<OpenApiPaths> OperationMustTranslateToValidToolName =>
+    public static ValidationRule<OpenApiPaths> OperationMustTranslateToValidToolName(ToolNamingStrategy toolNamingStrategy) =>
         new(nameof(OperationMustTranslateToValidToolName),
             (context, item) =>
             {
@@ -94,8 +95,10 @@ public static class OpenApiUtils{
                         context.Enter(operationType.ToString());
                         
                         var operation = item[pathName].Operations[operationType];
-                        var toolName = operation.McpToolName(pathName, operationType);
-                        if(!ValidToolName.IsMatch(toolName))
+                        var toolName = operation.McpToolName(pathName, operationType, toolNamingStrategy);
+                        if(toolName.Length > ToolNameMaxLength)
+                            context.CreateError(nameof(OperationMustTranslateToValidToolName),$"Operation {operationType} {pathName} translate to a too long tool name: {toolName}");
+                        else if(!ValidToolName.IsMatch(toolName))
                             context.CreateError(nameof(OperationMustTranslateToValidToolName),$"Operation {operationType} {pathName} translate to an invalid tool name: {toolName}");
                         
                         context.Exit();
@@ -120,13 +123,20 @@ public static class OpenApiUtils{
         });
     }
 
-    public static string McpToolName(this OpenApiOperation operation, string path, OperationType type)
+    public static string McpToolName(this OpenApiOperation operation, string path, OperationType type, ToolNamingStrategy toolNamingStrategy)
     {
         operation.Extensions.TryGetValue(XMcpToolName, out var extension);
-        var toolName = extension as OpenApiString;
-        return  toolName?.Value ??
-                operation.OperationId ?? 
-                type+path.Replace("{", "").Replace("}", "").Replace("/", "_");
+        var toolNameExtension = (extension as OpenApiString)?.Value;
+        var toolNameOperationId = operation.OperationId;
+        var toolNameVerbAndPath = type + path.Replace("{", "").Replace("}", "").Replace("/", "_");
+
+        return toolNamingStrategy switch
+        {
+            ToolNamingStrategy.extension => toolNameExtension ?? "",
+            ToolNamingStrategy.operationid => toolNameOperationId ?? "",
+            ToolNamingStrategy.verbandpath => toolNameVerbAndPath,
+            ToolNamingStrategy.extension_or_operationid_or_verbandpath => toolNameExtension ?? toolNameOperationId ?? toolNameVerbAndPath,
+        };
     }
     
     public static bool McpToolEnabled(this OpenApiOperation operation)

@@ -20,9 +20,9 @@ public class McpToolsProxy{
     
     private const string BodyParameterName = "body";
 
-    public McpToolsProxy(OpenApiDocument openApiDocument, string serverUrl, IAuthTokenGenerator tokenGenerator)
+    public McpToolsProxy(OpenApiDocument openApiDocument, string serverUrl, IAuthTokenGenerator tokenGenerator, ToolNamingStrategy toolNamingStrategy)
     {
-        _endpointTools = ExtractTools(openApiDocument);
+        _endpointTools = ExtractTools(openApiDocument, toolNamingStrategy);
         _serverUrl = serverUrl;
         _authTokenGenerator = tokenGenerator;
     }
@@ -80,7 +80,7 @@ public class McpToolsProxy{
     private CallToolResponse CallOk(params string[] messages) =>
         new() { IsError = false, Content = messages.Select(message => new Content { Text = message, Type = "text" }).ToList() };
     
-    private static IEnumerable<EndpointTool> ExtractTools(OpenApiDocument openApiDocument)
+    private static IEnumerable<EndpointTool> ExtractTools(OpenApiDocument openApiDocument, ToolNamingStrategy toolNamingStrategy)
     {
         var endpoints = new List<EndpointTool>();
         foreach (var path in openApiDocument.Paths)
@@ -90,7 +90,7 @@ public class McpToolsProxy{
                 if(!operation.McpToolEnabled())
                     continue;
 
-                var toolName = operation.McpToolName(path.Key, operationType);
+                var toolName = operation.McpToolName(path.Key, operationType, toolNamingStrategy);
                 if (!OpenApiUtils.ValidToolName.IsMatch(toolName))
                     continue;
 

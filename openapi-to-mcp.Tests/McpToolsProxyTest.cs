@@ -13,8 +13,8 @@ public class McpToolsProxyTest
     public async Task ListTools_ShouldListValidEndpointsOnly()
     {
         var (openApiDocument, diagnostic) =
-            await new OpenApiParser().Parse("resources/invalid_tool_names.oas.yaml", hostOverride: null, bearerToken: null);
-        var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator());
+            await new OpenApiParser().Parse("resources/invalid_tool_names.oas.yaml", hostOverride: null, bearerToken: null, toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
+        var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator(), toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
         var tools = await proxy.ListTools();
         Assert.That(tools, Is.Not.Null);
         var toolNamesAndDescriptions = tools.Tools.Select(t => (t.Name, t.Description));
@@ -29,24 +29,38 @@ public class McpToolsProxyTest
     public async Task ListTools_ShouldUseOpenApiExtensions()
     {
       var (openApiDocument, diagnostic) =
-        await new OpenApiParser().Parse("resources/extensions.oas.yaml", hostOverride: null, bearerToken: null);
-      var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator());
+        await new OpenApiParser().Parse("resources/extensions.oas.yaml", hostOverride: null, bearerToken: null,  toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
+      var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator(),  toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
       var tools = await proxy.ListTools();
       Assert.That(tools, Is.Not.Null);
       var toolNamesAndDescriptions = tools.Tools.Select(t => (t.Name, t.Description));
       Assert.That(toolNamesAndDescriptions, Is.EquivalentTo(new[]
       {
-        ("GreetdOld", "Greet users"), 
-        ("GreetNew", "Happily greet users")
+        ("GreetOld_FromExtension", "From get /greet/old operation description"), 
+        ("GreetNew_FromOperationId", "From get /greet/new extension description")
       }));
+    }
+    
+    [TestCase(ToolNamingStrategy.extension_or_operationid_or_verbandpath, "GreetOld_FromExtension", "GreetNew_FromOperationId")]
+    [TestCase(ToolNamingStrategy.operationid, "GreetOld_FromOperationId", "GreetNew_FromOperationId")]
+    [TestCase(ToolNamingStrategy.verbandpath, "Get_greet_old", "Get_greet_new")]
+    [TestCase(ToolNamingStrategy.extension, "GreetOld_FromExtension")]
+    public async Task ListTools_ShouldFollowToolNamingStrategy(ToolNamingStrategy strategy, params string[] expectedToolsNames)
+    {
+      var (openApiDocument, diagnostic) = await new OpenApiParser().Parse("resources/extensions.oas.yaml", hostOverride: null, bearerToken: null,  toolNamingStrategy: strategy);
+      var proxy = new McpToolsProxy(openApiDocument, "https://example.com", new NoAuthTokenGenerator(),  toolNamingStrategy: strategy);
+      var tools = await proxy.ListTools();
+      Assert.That(tools, Is.Not.Null);
+      var toolNames = tools.Tools.Select(t => t.Name);
+      Assert.That(toolNames, Is.EquivalentTo(expectedToolsNames));
     }
 
     [Test]
     public async Task Petstore_Example_addPet()
     {
         var (openApiDocument, diagnostic) =
-            await new OpenApiParser().Parse("resources/petstore3.oas.yaml", hostOverride: null, bearerToken: null);
-        var proxy = new McpToolsProxy(openApiDocument, "https://petstore3.swagger.io/api/v3", new NoAuthTokenGenerator());
+            await new OpenApiParser().Parse("resources/petstore3.oas.yaml", hostOverride: null, bearerToken: null,  toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
+        var proxy = new McpToolsProxy(openApiDocument, "https://petstore3.swagger.io/api/v3", new NoAuthTokenGenerator(),  toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
 
         //List tools
         var tools = await proxy.ListTools();

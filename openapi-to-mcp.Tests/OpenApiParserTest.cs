@@ -10,7 +10,7 @@ public class OpenApiParserTest
     [TestCase("resources/petstore2.oas.json", 20)] //local JSON v2
     public async Task Parse_ShouldParseRemoteOrFileAndJsonOrYaml(string openapiFileOrUrl, int expectedOperations)
     {
-        var (openApiDocument, diagnostic) = await new OpenApiParser().Parse(openapiFileOrUrl, hostOverride: null, bearerToken: null);
+        var (openApiDocument, diagnostic) = await new OpenApiParser().Parse(openapiFileOrUrl, hostOverride: null, bearerToken: null, toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
         
         Assert.That(openApiDocument, Is.Not.Null);
         var operations = openApiDocument.Paths.SelectMany(p => p.Value.Operations.Values);
@@ -22,7 +22,7 @@ public class OpenApiParserTest
     [Test]
     public async Task Parse_DetectInvalidToolNames()
     {
-        var (openApiDocument, diagnostic) = await new OpenApiParser().Parse("resources/invalid_tool_names.oas.yaml", hostOverride: null, bearerToken: null);
+        var (openApiDocument, diagnostic) = await new OpenApiParser().Parse("resources/invalid_tool_names.oas.yaml", hostOverride: null, bearerToken: null,  toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
         Assert.That(openApiDocument, Is.Not.Null);
 
         var operations = openApiDocument.Paths.SelectMany(p => p.Value.Operations.Values);
@@ -31,8 +31,8 @@ public class OpenApiParserTest
         var errorMessages = diagnostic.Errors.Select(e => e.Message);
         var expectedErrors = new[]
         {
-            "Operation Post /invalid-tool-name-because-the-path-is-way-to-long/{long-parameter} translate to an invalid tool name: Post_invalid-tool-name-because-the-path-is-way-to-long_long-parameter",
-            "Operation Get /invalid-tool-name translate to an invalid tool name: SuperSuperSuperSuperLongOperationIdSoTheToolNameIsLongerThan64Chars",
+            "Operation Post /invalid-tool-name-because-the-path-is-way-to-long/{long-parameter} translate to a too long tool name: Post_invalid-tool-name-because-the-path-is-way-to-long_long-parameter",
+            "Operation Get /invalid-tool-name translate to a too long tool name: SuperSuperSuperSuperLongOperationIdSoTheToolNameIsLongerThan64Chars",
             "Operation Post /invalid-tool-name translate to an invalid tool name: Invalid tool name from x-mcp-tool-name"
         };
         
@@ -50,7 +50,7 @@ public class OpenApiParserTest
     [TestCase("resources/absolute_server_url.oas.yaml", "https://other-host.com", "https://other-host.com/v1")]
     public async Task Parse_ShouldInferServerHostAndAllowOverride(string openapiFileOrUrl, string? hostOverride, string expectedServerUrl)
     {
-        var (openApiDocument, diagnostic) = await new OpenApiParser().Parse(openapiFileOrUrl, hostOverride, bearerToken: null);
+        var (openApiDocument, diagnostic) = await new OpenApiParser().Parse(openapiFileOrUrl, hostOverride, bearerToken: null,  toolNamingStrategy: ToolNamingStrategy.extension_or_operationid_or_verbandpath);
         
         Assert.That(openApiDocument, Is.Not.Null);
         var serverUrl = openApiDocument.Servers.First().Url;

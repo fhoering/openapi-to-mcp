@@ -13,6 +13,9 @@ public class Command
     [CliArgument(Description = "You OpenAPI specification (URL or file)")]
     public required string OpenApi { get; set; }
 
+    [CliOption(Aliases = ["-t"], Description = "How the tool name should be computed")]
+    public required ToolNamingStrategy ToolNamingStrategy { get; set; } = ToolNamingStrategy.extension_or_operationid_or_verbandpath;
+
     [CliOption(Aliases = ["-h"], Description = "Host override")]
     public string? HostOverride { get; set; } = null;
     
@@ -48,7 +51,7 @@ public class Command
         try
         {
             //Setup
-            var (openApiDocument, diagnostic) = await new OpenApiParser().Parse(OpenApi, HostOverride, BearerToken);
+            var (openApiDocument, diagnostic) = await new OpenApiParser().Parse(OpenApi, HostOverride, BearerToken, ToolNamingStrategy);
             diagnostic.Errors?.ToList().ForEach(e => Console.Error.WriteLine(e));
             diagnostic.Warnings?.ToList().ForEach(e => Console.Error.WriteLine(e));
             var serverUrl = openApiDocument.Servers?.FirstOrDefault()?.Url;
@@ -58,7 +61,7 @@ public class Command
                 return;
             }
             var auth = IAuthTokenGenerator.Build(openApiDocument, this);
-            var proxy = new McpToolsProxy(openApiDocument, serverUrl, auth);
+            var proxy = new McpToolsProxy(openApiDocument, serverUrl, auth, ToolNamingStrategy);
             
             //MCP server
             var builder = Host.CreateApplicationBuilder();
@@ -91,5 +94,15 @@ public class Command
 
 public enum OAuth2GrantType
 {
-    client_credentials,refresh_token,password
+    client_credentials,
+    refresh_token,
+    password
+}
+
+public enum ToolNamingStrategy
+{
+    extension_or_operationid_or_verbandpath,
+    extension,
+    operationid,
+    verbandpath
 }
