@@ -10,11 +10,17 @@ public interface IAuthTokenGenerator
 
     static IAuthTokenGenerator Build(OpenApiDocument oas, Command command)
     {
-        if(command.BearerToken != null)
+        if (command.BearerToken != null)
+        {
+            Console.Error.WriteLine("Using bearer token authentication");
             return new BearerTokenGenerator(command.BearerToken);
+        }
 
         if (command.Oauth2GrantType == null)
+        {
+            Console.Error.WriteLine("Using no authentication");
             return new NoAuthTokenGenerator();
+        }
         
         //extract the token url based on the selected flow
         var flows = oas.Components.SecuritySchemes.FirstOrDefault(s => s.Value.Type == SecuritySchemeType.OAuth2).Value?.Flows;
@@ -29,8 +35,9 @@ public interface IAuthTokenGenerator
         //use the provided token url if there is one
         tokenUrl = command.Oauth2TokenUrl ?? tokenUrl;
         if(tokenUrl == null)
-            throw new ArgumentException("No token url specified. Add one in your OpenApi document or provide one");
-        
+            throw new ArgumentException("No token url specified. Add one in your OpenApi document or provide one as CLI option");
+
+        Console.Error.WriteLine($"Using Oauth2 grant type {command.Oauth2GrantType} with token url: {tokenUrl}");
         return new OAuth2TokenGenerator(tokenUrl, command.Oauth2GrantType.Value, command.Oauth2ClientId, command.Oauth2ClientSecret, command.Oauth2RefreshToken, command.Oauth2Username, command.Oauth2Password);
     }
 }
