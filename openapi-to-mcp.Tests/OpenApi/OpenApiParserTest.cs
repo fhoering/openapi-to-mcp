@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
-using OpenApiToMcp;
+using OpenApiToMcp.OpenApi;
 
-namespace openapi_to_mcp.Tests;
+namespace OpenApiToMcp.Tests.OpenApi;
 
 public class OpenApiParserTest
 {

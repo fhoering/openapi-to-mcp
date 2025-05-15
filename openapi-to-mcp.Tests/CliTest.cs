@@ -1,33 +1,34 @@
 ﻿using NUnit.Framework;
 
-namespace openapi_to_mcp.Tests;
+namespace OpenApiToMcp.Tests;
 
 public class CliTest
 {
-    private TextWriter originalOut;
+    private TextWriter _originalOut;
     
     [SetUp]
     public void MockConsole()
     {
-        originalOut = Console.Out;
+        _originalOut = Console.Out;
     }
     
     [TearDown]
     public void UnmockConsole()
     {
-        Console.SetOut(originalOut);
+        Console.SetOut(_originalOut);
     }
 
     [Test]
-    public async Task Test() 
-    { 
+    public async Task ShouldPrintHelp() 
+    {
+        //arrange
         var testOut = new StringWriter();
         Console.SetOut(testOut);
         
         //act
         await Program.Main(["--help"]);
         
-        var stdOut = testOut.ToString() ?? "";
-        Assert.That(stdOut, Does.Contain("An on-the-fly OpenAPI MCP server"));
+        //assert
+        Assert.That(testOut.ToString(), Does.Contain("An on-the-fly OpenAPI MCP server"));
     }
 }

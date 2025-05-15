@@ -1,11 +1,12 @@
 ﻿using DotMake.CommandLine;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ModelContextProtocol.Protocol.Types;
+using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Readers;
+using OpenApiToMcp.OpenApi;
+using OpenApiToMcp.Server;
 
 namespace OpenApiToMcp;
-
 
 [CliCommand(Description = "An on-the-fly OpenAPI MCP server", ShortFormAutoGenerate = false)]
 public class Command
@@ -13,6 +14,9 @@ public class Command
     [CliArgument(Description = "You OpenAPI specification (URL or file)")]
     public required string OpenApi { get; set; }
 
+    [CliArgument(Description = "The MCP server transport")]
+    public required Transport Transport { get; set; } = Transport.sdtio;
+    
     [CliOption(Aliases = ["-t"], Description = "How the tool name should be computed")]
     public required ToolNamingStrategy ToolNamingStrategy { get; set; } = ToolNamingStrategy.extension_or_operationid_or_verbandpath;
 
@@ -46,53 +50,53 @@ public class Command
     [CliOption(Aliases = ["-i"], Description = "MCP instruction to be advertised by the server")]
     public string? Instructions { get; set; } = null;
     
+    [CliOption(Aliases = ["-sp"], Description = "(http transport only)")]
+    public int? ServerPort { get; set; }
+    
     [CliOption(Description = "Log more info (in sdterr)")]
     public bool Verbose { get; set; } = false;
  
     public async Task RunAsync()
     {
-        try
+        //Load openapi document and check integrity of parameters
+        var (openApiDocument, diagnostic) = await new OpenApiParser().Parse(OpenApi, HostOverride, BearerToken, ToolNamingStrategy);
+        if (!AreParametersAndOpenApiOk(openApiDocument, diagnostic))
+            return;
+        
+        //extract tools
+        var endpointTools = new OpenApiToolsExtractor().ExtractEndpointTools(openApiDocument, ToolNamingStrategy);
+
+        //start MCP server
+        var app = Transport switch
         {
-            //Setup
-            var (openApiDocument, diagnostic) = await new OpenApiParser().Parse(OpenApi, HostOverride, BearerToken, ToolNamingStrategy);
-            diagnostic.Errors?.ToList().ForEach(e => Console.Error.WriteLine(e));
-            if(Verbose)
-                diagnostic.Warnings?.ToList().ForEach(e => Console.Error.WriteLine(e));
-            var serverUrl = openApiDocument.Servers?.FirstOrDefault()?.Url;
-            if (string.IsNullOrEmpty(serverUrl) || !Uri.TryCreate(serverUrl, UriKind.Absolute, out _))
-            {
-                Console.Error.WriteLine($"The server URL cannot be inferred or is not absolute. Please use the {nameof(HostOverride)} option");
-                return;
-            }
-            var auth = IAuthTokenGenerator.Build(openApiDocument, this);
-            var proxy = new McpToolsProxy(openApiDocument, serverUrl, auth, ToolNamingStrategy, Verbose);
-            
-            //MCP server
-            var builder = Host.CreateApplicationBuilder();
-            builder.Logging.AddConsole(consoleLogOptions =>
-            {
-                consoleLogOptions.LogToStandardErrorThreshold = LogLevel.Information;
-            });
-            
-            builder.Services.AddMcpServer(serverOptions =>
-                {
-                    serverOptions.ServerInfo = new Implementation
-                    {
-                        Name = openApiDocument.Info?.Title ?? "API",
-                        Version = openApiDocument.Info?.Version ?? "0.0",
-                    };
-                    serverOptions.ServerInstructions = Instructions ?? openApiDocument.Info?.McpInstructions();
-                })
-                .WithStdioServerTransport()
-                .WithListToolsHandler((context, token) => proxy.ListTools())
-                .WithCallToolHandler(async (context, token) => await proxy.CallTool(context));
-            var app = builder.Build();
-            await app.RunAsync();
-        }
-        catch (Exception e)
+            Transport.sdtio => new SdtIoServer(openApiDocument, endpointTools, this).Build(),
+            Transport.http => new HttpServer(openApiDocument, endpointTools, this).Build(),
+            _ => throw new ArgumentOutOfRangeException(nameof(OpenApiToMcp.Transport))
+        };
+
+        await app.RunAsync();
+    }
+
+    private bool AreParametersAndOpenApiOk(OpenApiDocument openApiDocument, OpenApiDiagnostic diagnostic)
+    {
+        using var loggerFactory = LoggerFactory.Create(builder => builder
+            .SetMinimumLevel(Verbose ? LogLevel.Debug : LogLevel.Information)
+            .AddConsole(options => {
+                options.LogToStandardErrorThreshold = Transport == Transport.sdtio ? LogLevel.Debug : LogLevel.Error;
+            }));
+        var logger = loggerFactory.CreateLogger<Command>();
+        
+        diagnostic.Errors?.ToList().ForEach(e => logger.Log(LogLevel.Error, e.Message));
+        diagnostic.Warnings?.ToList().ForEach(e => logger.Log(LogLevel.Debug, e.Message));
+        var serverUrl = openApiDocument.Servers?.FirstOrDefault()?.Url;
+        if (string.IsNullOrEmpty(serverUrl) || !Uri.TryCreate(serverUrl, UriKind.Absolute, out _))
         {
-            Console.Error.WriteLine("Error: "+e.Message);
+            logger.Log(LogLevel.Error, $"The server URL cannot be inferred or is not absolute. Please use the {nameof(HostOverride)} option");
+            return false;
         }
+        
+        //TODO: check consistency of auth params
+        return true;
     }
 }
 
@@ -109,4 +113,9 @@ public enum ToolNamingStrategy
     extension,
     operationid,
     verbandpath
+}
+
+public enum Transport
+{
+    sdtio, http
 }

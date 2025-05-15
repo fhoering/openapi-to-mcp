@@ -1,7 +1,4 @@
-﻿using System.Diagnostics;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Interfaces;
 using Microsoft.OpenApi.Models;
@@ -9,7 +6,7 @@ using Microsoft.OpenApi.Readers;
 using Microsoft.OpenApi.Validations;
 using Microsoft.OpenApi.Writers;
 
-namespace OpenApiToMcp;
+namespace OpenApiToMcp.OpenApi;
 
 public class OpenApiParser
 {
@@ -42,7 +39,7 @@ public class OpenApiParser
             openApiDocumentWithoutRefAsString,
             new OpenApiWriterSettings() { InlineLocalReferences = true }
         ));
-        var openApiDocument = new OpenApiStringReader().Read(openApiDocumentWithoutRefAsString.ToString(), out var diag);
+        var openApiDocument = new OpenApiStringReader().Read(openApiDocumentWithoutRefAsString.ToString(), out _);
         
         //until https://github.com/microsoft/OpenAPI.NET/pull/2278 is released
         openApiDocument.Components ??= new OpenApiComponents();
@@ -58,7 +55,7 @@ public class OpenApiParser
         }
         if(!openApiDocument.Servers.Any())
             openApiDocument.Servers.Add(new OpenApiServer{Url = hostOverride ?? host});
-
+        
         return (openApiDocument,diagnostic);
     }
 
@@ -136,6 +133,7 @@ public static class OpenApiUtils{
             ToolNamingStrategy.operationid => toolNameOperationId ?? "",
             ToolNamingStrategy.verbandpath => toolNameVerbAndPath,
             ToolNamingStrategy.extension_or_operationid_or_verbandpath => toolNameExtension ?? toolNameOperationId ?? toolNameVerbAndPath,
+            _ => throw new ArgumentOutOfRangeException(nameof(toolNamingStrategy), toolNamingStrategy, null)
         };
     }
     

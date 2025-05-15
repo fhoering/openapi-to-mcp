@@ -1,0 +1,34 @@
+﻿openapi: 3.0.3
+info:
+  title: Postman Echo API
+  version: 1.0.0
+  x-mcp-instructions: echo echo echo...
+servers:
+  - url: https://postman-echo.com
+paths:
+  /get:
+    get:
+      x-mcp-tool-name: Echo
+      summary: Echoes GET request data
+      description: Returns query parameters, headers, and other request data.
+      parameters:
+        - name: foo
+          in: query
+          required: false
+          schema:
+            type: string
+            example: bar
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  args:
+                    type: object
+                  headers:
+                    type: object
+                  url:
+                    type: string
