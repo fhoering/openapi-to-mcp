@@ -1,7 +1,9 @@
 ﻿using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Web;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using ModelContextProtocol.Protocol.Types;
 using ModelContextProtocol.Server;
 using OpenApiToMcp.Auth;
@@ -11,6 +13,7 @@ namespace OpenApiToMcp.OpenApi;
 public class OpenApiToolsProxy(List<EndpointTool> endpointTools, OpenApiAuthConfiguration authConfig, ILogger<OpenApiToolsProxy> logger)
 {
     private readonly HttpClient _httpClient = new HttpClient(new OpenApiAuthHandler(authConfig)).WithOpenApiToMcpUserAgent();
+
     public ValueTask<ListToolsResult> ListTools(RequestContext<ListToolsRequestParams> requestContext, CancellationToken cancellationToken)
     {
         var tools = endpointTools.Select(e => e.tool).ToList();
@@ -63,7 +66,7 @@ public class OpenApiToolsProxy(List<EndpointTool> endpointTools, OpenApiAuthConf
     private CallToolResponse CallOk(params string[] messages) =>
         new() { IsError = false, Content = messages.Select(message => new Content { Text = message, Type = "text" }).ToList() };
     
-    private static string InjectPathParams(string path, IReadOnlyDictionary<string, JsonElement>? parameters)
+    public static string InjectPathParams(string path, IReadOnlyDictionary<string, JsonElement>? parameters)
     {
         if(parameters == null) return path;
  
@@ -79,15 +82,24 @@ public class OpenApiToolsProxy(List<EndpointTool> endpointTools, OpenApiAuthConf
         
         //query
         var builder = new UriBuilder(path);
-        var query = HttpUtility.ParseQueryString(string.Empty);
+        var finalQueryParams = new Dictionary<string, StringValues>();
         foreach (var kvp in queryParams)
         {
             if(kvp.Value.ValueKind == JsonValueKind.Null)
                 continue;
-            query[kvp.Key] = Uri.EscapeDataString(kvp.Value.ValueKind == JsonValueKind.String ? kvp.Value.GetString() ?? "" : kvp.Value.GetRawText());
+
+            if (kvp.Value.ValueKind == JsonValueKind.Array)
+            {
+                finalQueryParams[kvp.Key] = new StringValues(kvp.Value.EnumerateArray()
+                    .Select(element => element.GetString())
+                    .ToArray());
+            }
+            else
+            {
+                finalQueryParams[kvp.Key] = Uri.EscapeDataString(kvp.Value.ValueKind == JsonValueKind.String ? kvp.Value.GetString() ?? "" : kvp.Value.GetRawText());
+            }
         }
 
-        builder.Query = query.ToString();
-        return builder.Uri.ToString();
+        return QueryHelpers.AddQueryString(path, finalQueryParams);
     }
 }

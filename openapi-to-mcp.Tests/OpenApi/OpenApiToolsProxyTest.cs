@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Collections.ObjectModel;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ModelContextProtocol.Protocol.Types;
@@ -192,6 +193,19 @@ public class OpenApiToolsProxyTest
              }
              """.AsMinifiedJson()));
         });
+    }
+
+    [Test]
+    public void InjectPathParams()
+    {
+        var url = OpenApiToolsProxy.InjectPathParams("http://example.com/endpoint/{urlParam}", new Dictionary<string, JsonElement>
+        {
+            {"urlParam", JsonDocument.Parse("\"id\"").RootElement},
+            {"strValue", JsonDocument.Parse("\"my_string\"").RootElement},
+            {"intValue", JsonDocument.Parse("5").RootElement},
+            {"list", JsonDocument.Parse("[\"value1,value2\"]").RootElement}
+        });
+        Assert.That(url, Is.EqualTo("http://example.com/endpoint/id?strValue=my_string&intValue=5&list=value1,value2"));
     }
 }
 
